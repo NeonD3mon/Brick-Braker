@@ -1,51 +1,84 @@
+using System.Globalization;
+using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 
 public class BallBehavior : MonoBehaviour
 {
 
-    public Vector2 speed = new Vector2(5.0f, 5.0f);
-    public float LimitYMax = 4.51f;
-    public float LimitYMin = -4.72f;
-    public float LimitXMax = 1.16f;
-    public float LimitXMin = -7.47f;
 
-    public float BoundryProtection = 0.1f;
+    [SerializeField] float _launchForce = 5.0f;
 
+    [SerializeField] float _paddleInfluence = 0.4f;
 
+    [SerializeField] float _ballSpeedIncrement = 1.1f;
+
+    float GetNonZeroRandomFloat(float min = -1.0f, float max = 1.0f) {
+        float num;
+        do
+        {
+            num = Random.Range(min, max);
+        } while (Mathf.Approximately(num, 0.0f));
+        {
+    return num;  
+     }
+    }
+
+    private Rigidbody2D _rb;
+
+    void ResetBall()
+    {
+        _rb.linearVelocity = Vector2.zero;
+        transform.position = new Vector3(-3.06f, 1.62f, 0.0f);
+        Vector2 Direction = new Vector2(
+            GetNonZeroRandomFloat(),
+            GetNonZeroRandomFloat()
+        ).normalized;
+
+        _rb.AddForce(Direction * _launchForce, ForceMode2D.Impulse);
+
+    }
+
+    
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
-        speed.x *= Random.value < 0.5 ? -1 : 1;
-        speed.y *= Random.value < 0.5 ? -1 : 1;
+        _rb = GetComponent<Rigidbody2D>();
+    
+        ResetBall();
+
     }
+
+    void OnCollisionEnter2D(Collision2D collision)
+    {
+        if (collision.gameObject.CompareTag("Paddle"))
+        {
+            if (!Mathf.Approximately(collision.rigidbody.linearVelocityX, 0.0f))
+            {
+                Vector2 direction = _rb.linearVelocity * (1 - _paddleInfluence)
+                                    + collision.rigidbody.linearVelocity * _paddleInfluence;
+
+                _rb.linearVelocity = _rb.linearVelocity.magnitude * direction.normalized * _ballSpeedIncrement;
+            }
+            _rb.linearVelocity *= _ballSpeedIncrement;
+        }
+
+        else if (collision.gameObject.CompareTag("Border"))
+        {
+            _rb.linearVelocity *= _ballSpeedIncrement;
+        }
+
+        else if (collision.gameObject.CompareTag("Brick"))
+        {
+            _rb.linearVelocity *= _ballSpeedIncrement;
+        }
+    }
+
+    
 
     // Update is called once per frame
     void Update()
     {
-
-        Vector3 newPosition = transform.position + (Vector3)speed * Time.deltaTime;
-
-        newPosition.x = Mathf.Clamp(newPosition.x, min: LimitXMin, max: LimitXMax);
-        newPosition.y = Mathf.Clamp(newPosition.y, min: LimitYMin, max: LimitYMax);
-
-        if ((newPosition.x == LimitXMax) || (newPosition.x == LimitXMin))
-        {
-            speed.x *= -1.0f;
-             newPosition.x = Mathf.Clamp(newPosition.x + (speed.x > 0 ? BoundryProtection : -1 * BoundryProtection),
-             min: LimitXMin,
-             max: LimitXMax);
-        }
-
-        if ((newPosition.y == LimitYMax) || (newPosition.y == LimitYMin))
-        {
-            speed.y *= -1.0f;
-            newPosition.y = Mathf.Clamp(newPosition.y + (speed.x > 0 ? BoundryProtection : -1 * BoundryProtection),
-             min: LimitYMin,
-             max: LimitYMax);
-        }
-
-        transform.position = newPosition;
         
     }
 }
