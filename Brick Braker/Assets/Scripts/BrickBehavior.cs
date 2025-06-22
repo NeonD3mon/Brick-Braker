@@ -11,6 +11,8 @@ public class BrickBehavior : MonoBehaviour
         {
             // gameObject represents the GameObject that has this script.
             Destroy(gameObject);
+            GameBehavior.Instance.ScorePoint();
+            
         }
     }
     // Start is called once before the first execution of Update after the MonoBehaviour is created
@@ -19,9 +21,11 @@ public class BrickBehavior : MonoBehaviour
         _rb = GetComponent<Rigidbody2D>();
     }
 
+    
+
     // Update is called once per frame
     void Update()
-    {
-        
-    }
+{
+    
+}
 }

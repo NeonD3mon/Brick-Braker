@@ -5,6 +5,7 @@ using UnityEngine;
 public class BallBehavior : MonoBehaviour
 {
 
+    public bool DidHitPaddleLast = true;
 
     [SerializeField] float _launchForce = 5.0f;
 
@@ -12,15 +13,16 @@ public class BallBehavior : MonoBehaviour
 
     [SerializeField] float _ballSpeedIncrement = 1.1f;
 
-    float GetNonZeroRandomFloat(float min = -1.0f, float max = 1.0f) {
+    float GetNonZeroRandomFloat(float min = -1.0f, float max = 1.0f)
+    {
         float num;
         do
         {
             num = Random.Range(min, max);
         } while (Mathf.Approximately(num, 0.0f));
         {
-    return num;  
-     }
+            return num;
+        }
     }
 
     private Rigidbody2D _rb;
@@ -38,13 +40,13 @@ public class BallBehavior : MonoBehaviour
 
     }
 
-    
+
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
         _rb = GetComponent<Rigidbody2D>();
-    
+
         ResetBall();
 
     }
@@ -61,6 +63,7 @@ public class BallBehavior : MonoBehaviour
                 _rb.linearVelocity = _rb.linearVelocity.magnitude * direction.normalized * _ballSpeedIncrement;
             }
             _rb.linearVelocity *= _ballSpeedIncrement;
+            DidHitPaddleLast = true;
         }
 
         else if (collision.gameObject.CompareTag("Border"))
@@ -71,14 +74,25 @@ public class BallBehavior : MonoBehaviour
         else if (collision.gameObject.CompareTag("Brick"))
         {
             _rb.linearVelocity *= _ballSpeedIncrement;
+            DidHitPaddleLast = false;
         }
+
     }
 
-    
+    void OnTriggerEnter2D(Collider2D collision)
+    {
+        if (collision.gameObject.CompareTag("LoseArea"))
+        {
+            GameBehavior.Instance.YouLose();
+        }
+    }
 
     // Update is called once per frame
     void Update()
     {
-        
+
     }
+    
+    
+    
 }
