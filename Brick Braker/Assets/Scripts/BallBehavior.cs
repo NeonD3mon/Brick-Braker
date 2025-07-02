@@ -6,24 +6,20 @@ public class BallBehavior : MonoBehaviour
 {
 
     public bool DidHitPaddleLast = true;
+    private Vector2 _prevBallVelocity;
+    private bool _isPaused = false;
 
     [SerializeField] float _launchForce = 5.0f;
 
     [SerializeField] float _paddleInfluence = 0.4f;
 
-    [SerializeField] float _ballSpeedIncrement = 1.1f;
+    public static float _ballSpeedIncrement = 1.001f;
 
-    float GetNonZeroRandomFloat(float min = -1.0f, float max = 1.0f)
-    {
-        float num;
-        do
-        {
-            num = Random.Range(min, max);
-        } while (Mathf.Approximately(num, 0.0f));
-        {
-            return num;
-        }
-    }
+    [SerializeField] AudioClip _wallHitClip;
+    [SerializeField] AudioClip _paddleHitClip;
+    [SerializeField] AudioClip _brickHitClip;
+    private AudioSource _source;
+
 
     private Rigidbody2D _rb;
 
@@ -32,8 +28,8 @@ public class BallBehavior : MonoBehaviour
         _rb.linearVelocity = Vector2.zero;
         transform.position = new Vector3(-3.06f, 1.62f, 0.0f);
         Vector2 Direction = new Vector2(
-            GetNonZeroRandomFloat(),
-            GetNonZeroRandomFloat()
+            Utilities.GetNonZeroRandomFloat(-0.2f, 0.2f),
+            Utilities.GetNonZeroRandomFloat()
         ).normalized;
 
         _rb.AddForce(Direction * _launchForce, ForceMode2D.Impulse);
@@ -46,9 +42,17 @@ public class BallBehavior : MonoBehaviour
     void Start()
     {
         _rb = GetComponent<Rigidbody2D>();
+        _source = GetComponent<AudioSource>();
 
         ResetBall();
 
+    }
+
+    void PlaySound(AudioClip clip, float pitchMin = 0.8f, float pitchmax = 1.2f)
+    {
+        _source.clip = clip;
+        _source.pitch = Random.Range(pitchMin, pitchmax);
+        _source.Play();
     }
 
     void OnCollisionEnter2D(Collision2D collision)
@@ -62,19 +66,23 @@ public class BallBehavior : MonoBehaviour
 
                 _rb.linearVelocity = _rb.linearVelocity.magnitude * direction.normalized * _ballSpeedIncrement;
             }
-            _rb.linearVelocity *= _ballSpeedIncrement;
+           
             DidHitPaddleLast = true;
+            _rb.linearVelocity *= _ballSpeedIncrement;
+            PlaySound(_paddleHitClip);
         }
 
         else if (collision.gameObject.CompareTag("Border"))
         {
-            _rb.linearVelocity *= _ballSpeedIncrement;
+            PlaySound(_wallHitClip);
+
         }
 
         else if (collision.gameObject.CompareTag("Brick"))
         {
-            _rb.linearVelocity *= _ballSpeedIncrement;
+            
             DidHitPaddleLast = false;
+            PlaySound(_brickHitClip);
         }
 
     }
@@ -90,9 +98,26 @@ public class BallBehavior : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        if (GameBehavior.Instance.CurrentState == Utilities.GameState.Pause)
+        {
+            if (!_isPaused)
+            {
+                _isPaused = true;
+                _prevBallVelocity = _rb.linearVelocity;
+                _rb.linearVelocity = Vector2.zero;
+            }
 
-    }
-    
-    
-    
+        }
+        else
+        {
+            if (_isPaused)
+                _rb.linearVelocity = _prevBallVelocity;
+            _isPaused = false;
+        }
+
+    } 
 }
+    
+    
+    
+

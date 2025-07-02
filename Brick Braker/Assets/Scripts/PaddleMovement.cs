@@ -3,7 +3,7 @@ using UnityEngine;
 public class PaddleMovement : MonoBehaviour
 {
 
-    public float Speed = 5.0f;
+    public static float Speed = 5.0f;
 
     public float LimitXLeft = -6.56f;
     public float LimitXRight = 0.2f;
@@ -21,7 +21,9 @@ public class PaddleMovement : MonoBehaviour
     {
         float movement = 0.0f;
 
-        if (Input.GetKey(LeftDirection))
+        if (GameBehavior.Instance.CurrentState == Utilities.GameState.Play)
+        {
+            if (Input.GetKey(LeftDirection))
         {
             movement -= Speed;
         }
@@ -30,7 +32,8 @@ public class PaddleMovement : MonoBehaviour
         {
             movement += Speed;
         }
-
+         }
+        
         Vector3 newPosition = transform.position + new Vector3(movement, 0.0f, 0.0f) * Time.deltaTime;
 
         newPosition.x = Mathf.Clamp(newPosition.x, min: LimitXLeft, max: LimitXRight);

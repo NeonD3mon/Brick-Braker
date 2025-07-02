@@ -6,11 +6,13 @@ public class GameBehavior : MonoBehaviour
 {
     public static GameBehavior Instance;
 
+    public static int BrickLevel;
+
     public int _playerScore = 0;
+    public Utilities.GameState CurrentState;
+    
     int _scoreMultiplier;
-
     public BallBehavior ball;
-
     public BrickBehavior brick;
 
 
@@ -29,6 +31,7 @@ public class GameBehavior : MonoBehaviour
     [SerializeField] TextMeshProUGUI _youLoseTitle;
 
     [SerializeField] GameObject Brick;
+    [SerializeField] TMP_Text _messagesGUI;
 
     void Awake()
     {
@@ -41,11 +44,14 @@ public class GameBehavior : MonoBehaviour
         }
 
         _youLoseTitle.gameObject.SetActive(false);
+        BrickLevel = 2;
     }
 
     void Start()
     {
         _scoreMultiplier = 1;
+        CurrentState = Utilities.GameState.Play;
+        _messagesGUI.enabled = false;
     }
 
     public void ScorePoint()
@@ -77,6 +83,25 @@ public class GameBehavior : MonoBehaviour
             levelCleared = true;
             NextLevel();
         }
+         if (Input.GetKeyDown(KeyCode.Escape))
+        {
+            switch (CurrentState)
+            {
+                case Utilities.GameState.Play:
+                    CurrentState = Utilities.GameState.Pause;
+                    _messagesGUI.enabled = true;
+                    break;
+
+                case Utilities.GameState.Pause:
+                    CurrentState = Utilities.GameState.Play;
+                    _messagesGUI.enabled = false;
+                    break;
+
+                default:
+                    break;
+
+            }
+        }
     }
     void NextLevel()
     {
@@ -85,7 +110,10 @@ public class GameBehavior : MonoBehaviour
 
         {
             Debug.Log("Generating more bricks!");
+            BrickLevel++;
             numberOfBricks++;
+            BallBehavior._ballSpeedIncrement += 0.1f;
+            PaddleMovement.Speed += 0.5f;
             for (int i = 0; i < numberOfBricks; i++)
             {
                 Vector3 randomPos = new Vector3(
